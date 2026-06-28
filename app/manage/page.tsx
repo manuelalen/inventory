@@ -1,7 +1,9 @@
 import postgres from 'postgres';
 import Link from 'next/link';
 import { addItem, updateStock } from '../actions';
+
 export const dynamic = 'force-dynamic';
+
 const sql = postgres(process.env.POSTGRES_PRISMA_URL as string);
 
 interface Item {
@@ -23,7 +25,6 @@ export default async function ManagePage() {
           </Link>
         </div>
 
-        {/* Sección 1: Formulario de Alta */}
         <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 mb-8">
           <h2 className="text-xl font-semibold text-gray-700 mb-4">Añadir Nuevo Objeto</h2>
           <form action={addItem} className="flex flex-col md:flex-row gap-4">
@@ -51,7 +52,6 @@ export default async function ManagePage() {
           </form>
         </div>
 
-        {/* Sección 2: Tabla de Edición Directa */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
           <h2 className="text-xl font-semibold text-gray-700 p-6 border-b border-gray-200">Modificar Unidades</h2>
           <table className="min-w-full text-left text-sm font-light">
@@ -68,7 +68,6 @@ export default async function ManagePage() {
                   <td className="px-6 py-4 font-medium text-gray-900">{item.id}</td>
                   <td className="px-6 py-4 text-gray-700 font-medium">{item.name}</td>
                   <td className="px-6 py-4">
-                    {/* Cada fila es un formulario independiente que procesa su propia actualización */}
                     <form action={updateStock} className="flex items-center gap-2">
                       <input type="hidden" name="id" value={item.id} />
                       <input
