@@ -1,7 +1,7 @@
 import postgres from 'postgres';
 import Link from 'next/link';
 import { addItem, updateStock } from '../actions';
-
+export const dynamic = 'force-dynamic';
 const sql = postgres(process.env.POSTGRES_PRISMA_URL as string);
 
 interface Item {
