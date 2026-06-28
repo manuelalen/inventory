@@ -4,16 +4,17 @@ import { addItem, updateStock } from '../actions';
 
 export const dynamic = 'force-dynamic';
 
-const sql = postgres(process.env.POSTGRES_PRISMA_URL as string);
-
-interface Item {
-  id: number;
-  name: string;
-  stock: number;
-}
-
 export default async function ManagePage() {
-  const rows = await sql<Item[]>`SELECT id, name, stock FROM items ORDER BY id ASC;`;
+  let rows: any[] = [];
+
+  if (process.env.POSTGRES_PRISMA_URL) {
+    const sql = postgres(process.env.POSTGRES_PRISMA_URL);
+    try {
+      rows = await sql`SELECT id, name, stock FROM items ORDER BY id ASC;`;
+    } catch (error) {
+      console.error("Error conectando a DB:", error);
+    }
+  }
 
   return (
     <main className="min-h-screen bg-gray-50 p-8 font-sans">

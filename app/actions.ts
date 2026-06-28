@@ -3,9 +3,10 @@
 import postgres from 'postgres';
 import { revalidatePath } from 'next/cache';
 
-const sql = postgres(process.env.POSTGRES_PRISMA_URL as string);
-
 export async function addItem(formData: FormData) {
+  if (!process.env.POSTGRES_PRISMA_URL) return;
+  const sql = postgres(process.env.POSTGRES_PRISMA_URL);
+  
   const name = formData.get('name') as string;
   const stock = parseInt(formData.get('stock') as string, 10);
 
@@ -18,6 +19,9 @@ export async function addItem(formData: FormData) {
 }
 
 export async function updateStock(formData: FormData) {
+  if (!process.env.POSTGRES_PRISMA_URL) return;
+  const sql = postgres(process.env.POSTGRES_PRISMA_URL);
+  
   const id = parseInt(formData.get('id') as string, 10);
   const stock = parseInt(formData.get('stock') as string, 10);
 

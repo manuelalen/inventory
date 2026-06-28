@@ -3,16 +3,19 @@ import Link from 'next/link';
 
 export const dynamic = 'force-dynamic';
 
-const sql = postgres(process.env.POSTGRES_PRISMA_URL as string);
-
-interface Item {
-  id: number;
-  name: string;
-  stock: number;
-}
-
 export default async function InventoryPage() {
-  const rows = await sql<Item[]>`SELECT id, name, stock FROM items ORDER BY id ASC;`;
+  let rows: any[] = [];
+
+  // EL BYPASS: Solo intentamos conectar si la variable existe realmente.
+  // Si Vercel ejecuta esto en el build ciegamente, se lo salta y no explota.
+  if (process.env.POSTGRES_PRISMA_URL) {
+    const sql = postgres(process.env.POSTGRES_PRISMA_URL);
+    try {
+      rows = await sql`SELECT id, name, stock FROM items ORDER BY id ASC;`;
+    } catch (error) {
+      console.error("Error conectando a DB:", error);
+    }
+  }
 
   return (
     <main className="min-h-screen bg-gray-50 p-8 font-sans">
@@ -59,7 +62,7 @@ export default async function InventoryPage() {
           
           {rows.length === 0 && (
             <div className="p-6 text-center text-gray-500">
-              No hay objetos en la base de datos.
+              No hay objetos en la base de datos o conectando...
             </div>
           )}
         </div>
