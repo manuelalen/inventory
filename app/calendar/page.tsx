@@ -1,16 +1,15 @@
 import postgres from 'postgres';
 import Link from 'next/link';
 
-// Cortafuegos para Vercel
+// Cortafuegos de seguridad para Vercel
 export const dynamic = 'force-dynamic';
 
-// Definimos la estructura anidada que nos devolverá Postgres
 interface Meal {
   id: number;
   day_of_week: string;
   meal_type: string;
   recipe_name: string;
-  ingredients: { name: string; quantity: string }[];
+  ingredients: { name: string; amount: number; unit: string }[];
 }
 
 export default async function CalendarPage() {
@@ -19,7 +18,7 @@ export default async function CalendarPage() {
   if (process.env.POSTGRES_PRISMA_URL) {
     const sql = postgres(process.env.POSTGRES_PRISMA_URL);
     try {
-      // Usamos json_agg para agrupar los ingredientes dentro del mismo objeto de la comida
+      // json_agg extrae los nuevos campos separando la cantidad de la unidad
       meals = await sql<Meal[]>`
         SELECT 
           m.id, 
@@ -28,7 +27,11 @@ export default async function CalendarPage() {
           m.recipe_name,
           COALESCE(
             json_agg(
-              json_build_object('name', i.name, 'quantity', i.quantity)
+              json_build_object(
+                'name', i.name, 
+                'amount', i.amount, 
+                'unit', i.unit
+              )
             ) FILTER (WHERE i.id IS NOT NULL), '[]'
           ) as ingredients
         FROM weekly_meals m
@@ -39,30 +42,38 @@ export default async function CalendarPage() {
             WHEN 'Lunes' THEN 1 WHEN 'Martes' THEN 2 WHEN 'Miércoles' THEN 3 
             WHEN 'Jueves' THEN 4 WHEN 'Viernes' THEN 5 WHEN 'Sábado' THEN 6 WHEN 'Domingo' THEN 7 
           END,
-          m.meal_type DESC; -- 'Comida' antes que 'Cena'
+          m.meal_type DESC;
       `;
     } catch (error) {
       console.error("Error conectando a DB:", error);
     }
   }
 
-  // Agrupamos en JS por día para renderizar el calendario fácilmente
   const days = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
 
   return (
     <main className="min-h-screen bg-gray-50 p-8 font-sans">
       <div className="max-w-7xl mx-auto">
-        <div className="flex justify-between items-center mb-8">
+        
+        {/* Cabecera con navegación */}
+        <div className="flex flex-col sm:flex-row justify-between items-center mb-8 gap-4">
           <h1 className="text-3xl font-bold text-gray-800">Menú Semanal</h1>
-          <Link href="/" className="text-blue-600 hover:underline text-sm font-medium">
-            ← Volver al Inventario
-          </Link>
+          <div className="flex items-center gap-4">
+            <Link href="/" className="text-blue-600 hover:underline text-sm font-medium">
+              ← Volver al Inventario
+            </Link>
+            <Link 
+              href="/shopping-list" 
+              className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+            >
+              🛒 Lista de la Compra
+            </Link>
+          </div>
         </div>
 
-        {/* Grid de 7 columnas para los días de la semana */}
+        {/* Grid del Calendario */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-7 gap-4">
           {days.map(day => {
-            // Filtramos las comidas de este día
             const dayMeals = meals.filter(m => m.day_of_week === day);
             const comida = dayMeals.find(m => m.meal_type === 'Comida');
             const cena = dayMeals.find(m => m.meal_type === 'Cena');
@@ -82,7 +93,9 @@ export default async function CalendarPage() {
                         <p className="font-medium text-gray-900 mb-2">{comida.recipe_name}</p>
                         <ul className="text-sm text-gray-600 space-y-1 list-disc pl-4">
                           {comida.ingredients.map((ing, idx) => (
-                            <li key={idx}>{ing.name} <span className="text-gray-400">({ing.quantity})</span></li>
+                            <li key={idx}>
+                              {ing.name} <span className="text-gray-400 font-medium">({ing.amount} {ing.unit})</span>
+                            </li>
                           ))}
                         </ul>
                       </div>
@@ -99,7 +112,9 @@ export default async function CalendarPage() {
                         <p className="font-medium text-gray-900 mb-2">{cena.recipe_name}</p>
                         <ul className="text-sm text-gray-600 space-y-1 list-disc pl-4">
                           {cena.ingredients.map((ing, idx) => (
-                            <li key={idx}>{ing.name} <span className="text-gray-400">({ing.quantity})</span></li>
+                            <li key={idx}>
+                              {ing.name} <span className="text-gray-400 font-medium">({ing.amount} {ing.unit})</span>
+                            </li>
                           ))}
                         </ul>
                       </div>
