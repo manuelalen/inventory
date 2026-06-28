@@ -1,70 +1,33 @@
-import postgres from 'postgres';
 import Link from 'next/link';
 
-export const dynamic = 'force-dynamic';
-
-export default async function InventoryPage() {
-  let rows: any[] = [];
-
-  // EL BYPASS: Solo intentamos conectar si la variable existe realmente.
-  // Si Vercel ejecuta esto en el build ciegamente, se lo salta y no explota.
-  if (process.env.POSTGRES_PRISMA_URL) {
-    const sql = postgres(process.env.POSTGRES_PRISMA_URL);
-    try {
-      rows = await sql`SELECT id, name, stock FROM items ORDER BY id ASC;`;
-    } catch (error) {
-      console.error("Error conectando a DB:", error);
-    }
-  }
-
+export default function Home() {
   return (
-    <main className="min-h-screen bg-gray-50 p-8 font-sans">
-      <div className="max-w-4xl mx-auto">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold text-gray-800">Estado del Inventario</h1>
-          <Link 
-            href="/manage" 
-            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-          >
-            Gestionar Inventario →
+    <main className="min-h-screen bg-gray-50 flex items-center justify-center p-8 font-sans">
+      <div className="max-w-4xl w-full">
+        <h1 className="text-4xl font-extrabold text-gray-900 text-center mb-2">Panel de Control</h1>
+        <p className="text-center text-gray-500 mb-12">Gestión centralizada del hogar</p>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* Tarjeta Inventario */}
+          <Link href="/inventory" className="group block bg-white rounded-2xl shadow-sm border border-gray-200 p-8 hover:shadow-md hover:border-blue-300 transition-all">
+            <div className="text-4xl mb-4">📦</div>
+            <h2 className="text-xl font-bold text-gray-800 mb-2 group-hover:text-blue-600 transition-colors">Inventario</h2>
+            <p className="text-gray-500 text-sm">Gestiona el stock actual de objetos y productos.</p>
           </Link>
-        </div>
-        
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-          <table className="min-w-full text-left text-sm font-light">
-            <thead className="bg-gray-100 border-b border-gray-200 font-medium text-gray-700">
-              <tr>
-                <th scope="col" className="px-6 py-4">ID</th>
-                <th scope="col" className="px-6 py-4">Objeto</th>
-                <th scope="col" className="px-6 py-4">Stock Disponible</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((item) => (
-                <tr key={item.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
-                  <td className="px-6 py-4 font-medium text-gray-900">{item.id}</td>
-                  <td className="px-6 py-4 text-gray-700">{item.name}</td>
-                  <td className="px-6 py-4">
-                    <span 
-                      className={`px-3 py-1 rounded-full text-xs font-bold ${
-                        item.stock > 10 
-                          ? 'bg-green-100 text-green-800' 
-                          : 'bg-red-100 text-red-800'
-                      }`}
-                    >
-                      {item.stock} uds.
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          
-          {rows.length === 0 && (
-            <div className="p-6 text-center text-gray-500">
-              No hay objetos en la base de datos o conectando...
-            </div>
-          )}
+
+          {/* Tarjeta Menú Semanal */}
+          <Link href="/calendar" className="group block bg-white rounded-2xl shadow-sm border border-gray-200 p-8 hover:shadow-md hover:border-purple-300 transition-all">
+            <div className="text-4xl mb-4">📅</div>
+            <h2 className="text-xl font-bold text-gray-800 mb-2 group-hover:text-purple-600 transition-colors">Menú Semanal</h2>
+            <p className="text-gray-500 text-sm">Planifica las comidas y cenas de toda la semana.</p>
+          </Link>
+
+          {/* Tarjeta Lista de la Compra */}
+          <Link href="/shopping-list" className="group block bg-white rounded-2xl shadow-sm border border-gray-200 p-8 hover:shadow-md hover:border-green-300 transition-all">
+            <div className="text-4xl mb-4">🛒</div>
+            <h2 className="text-xl font-bold text-gray-800 mb-2 group-hover:text-green-600 transition-colors">Lista de Compra</h2>
+            <p className="text-gray-500 text-sm">Revisa lo que falta y añade productos manualmente.</p>
+          </Link>
         </div>
       </div>
     </main>
